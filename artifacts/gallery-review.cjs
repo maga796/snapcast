@@ -1,0 +1,41 @@
+const { chromium } = require('playwright');
+const { strict: assert } = require('node:assert');
+(async () => {
+  const browser = await chromium.launch({ channel: 'msedge' });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await page.goto('http://localhost:3000/gallery-review');
+    await page.getByRole('heading', { name: 'Choose a format' }).waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await page.screenshot({ path: 'artifacts/gallery-desktop.png' });
+    assert.equal(await page.locator('.rw-format-card').count(), 12);
+    await page.getByRole('button', { name: 'Demos', exact: true }).click();
+    assert.equal(await page.locator('.rw-format-card').count(), 4);
+    await page.getByRole('searchbox').fill('  PRODUCT  ');
+    assert.equal(await page.locator('.rw-format-card').count(), 2);
+    await page.getByRole('button', { name: 'Product Demo — Top pick' }).focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.getByLabel('Action result').textContent(), '0');
+    await page.getByRole('searchbox').fill('no-matching-format');
+    await page.getByText('No formats match your search.').waitFor();
+    await page.getByRole('button', { name: 'Use my own recording' }).click();
+    assert.equal(await page.getByLabel('Action result').textContent(), 'recording');
+    await page.getByRole('searchbox').fill('');
+    await page.getByRole('button', { name: 'All', exact: true }).click();
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 375);
+    await page.screenshot({ path: 'artifacts/gallery-mobile.png', fullPage: true });
+    await page.getByLabel('Review status').selectOption('running');
+    assert.equal(await page.getByRole('searchbox').isDisabled(), true);
+    assert.equal(await page.locator('.rw-format-skeleton').count(), 6);
+    await page.getByLabel('Review status').selectOption('error');
+    await page.getByRole('alert').filter({ hasText: 'Formats could not be loaded' }).waitFor();
+    assert.equal(await page.locator('.rw-format-card').count(), 1);
+    await page.getByLabel('Review status').selectOption('idle');
+    await page.getByRole('button', { name: 'Toggle empty' }).click();
+    await page.getByText('No formats available yet.').waitFor();
+    assert.equal(await page.locator('.rw-format-card').count(), 1);
+    console.log('PASS: category/search intersection, trimmed case-insensitive search, keyboard selection, both callbacks, loading/error/empty states, 375px overflow check.');
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });
