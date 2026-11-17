@@ -1,5 +1,5 @@
-import { ScreenState } from "@/components/ui/screen-state";
+import { CampaignsLoading } from "@/components/campaigns/campaigns";
 
 export default function Loading() {
-  return <ScreenState title="Campaigns" status="running" />;
+  return <section className="campaigns"><header className="rw-header"><h1>Campaigns</h1></header><CampaignsLoading /></section>;
 }
