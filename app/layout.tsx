@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">{process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY ? <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/dashboard" signUpFallbackRedirectUrl="/dashboard" appearance={{ variables: { colorPrimary: "#29dc8b", colorPrimaryForeground: "#070c0a", colorNeutral: "#e5ede9", colorBackground: "#0e1511", colorForeground: "#e5ede9", colorMutedForeground: "#91a69b", colorInput: "#070c0a", colorInputForeground: "#e5ede9", borderRadius: "0.75rem" } }}>{children}</ClerkProvider> : children}</body>
     </html>
   );
 }
